@@ -1,4 +1,3 @@
-import logo from "./logo.svg";
 import "./App.css";
 import web3 from "./web3";
 import lottery from "./lottery";
@@ -8,6 +7,7 @@ function App() {
   const [playerList, setPlayerList] = useState([]);
   const [fund, setFund] = useState("");
   const [inputAmount, setInputAmount] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const fetchManger = async () => {
@@ -24,6 +24,26 @@ function App() {
   const handleChange = (e) => {
     setInputAmount(e.target.value);
   };
+  const submitHandle = async (e) => {
+    e.preventDefault();
+    const accounts = await web3.eth.getAccounts();
+    setMessage("Hang on! the transaction is being proccessed!");
+    console.log(typeof parseFloat(fund));
+    await lottery.methods.enter().send({
+      from: accounts[0],
+      value: web3.utils.toWei(fund, "ether"),
+    });
+    setMessage("wooho! You have entered Successfully!!!");
+  };
+  const pickHandler = async () => {
+    const accounts = await web3.eth.getAccounts();
+    setMessage("Picking Winner! Hold on.");
+    await lottery.methods.pickWinner().send({
+      from: accounts[0],
+    });
+    const winner = await lottery.methods.getWinner().call();
+    setMessage("Winner picked: " + winner);
+  };
 
   return (
     <div className="App">
@@ -34,7 +54,7 @@ function App() {
         ether.
       </p>
       <hr />
-      <form>
+      <form onSubmit={submitHandle}>
         <h4>Want to try your Luck?</h4>
         <label>Amount(in ether): </label>
         <input
@@ -44,6 +64,11 @@ function App() {
         ></input>
         <button type="submit">Enter</button>
       </form>
+      <hr />
+      <h4>Ready to pick a Winner?</h4>
+      <button onClick={pickHandler}>Pick One</button>
+      <hr />
+      <h2>{message} </h2>
     </div>
   );
 }
